@@ -1,4 +1,4 @@
-name:name: Build BeautySwap APK
+name: Build BeautySwap APK
 on: push
 jobs:
   build:

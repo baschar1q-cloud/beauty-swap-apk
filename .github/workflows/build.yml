@@ -1,51 +1,38 @@
-name: Build BeautySwap APK
-on: [push]
+name:name: Build BeautySwap APK
+on: push
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: 8.5
-      - name: Create Project and Build
+          distribution: temurin
+          java-version: 17
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Build APK
         run: |
           echo "include ':app'" > settings.gradle
-          echo "rootProject.name='BeautySwap'" >> settings.gradle
           mkdir -p app/src/main/java/com/beautyswap/app
           mkdir -p app/src/main/res/layout
           mkdir -p app/src/main/res/values
-          cat > app/build.gradle <<'EOF'
-          plugins { id 'com.android.application' }
-          android {
-            namespace 'com.beautyswap.app'
-            compileSdk 34
-            defaultConfig {
-              applicationId 'com.beautyswap.app'
-              minSdk 24
-              targetSdk 34
-              versionCode 1
-              versionName '1.0'
-            }
-          }
-          dependencies {
-            implementation 'androidx.appcompat:appcompat:1.6.1'
-          }
-          EOF
+          echo "plugins { id 'com.android.application' }" > app/build.gradle
+          echo "android { namespace 'com.beautyswap.app'; compileSdk 34; defaultConfig { applicationId 'com.beautyswap.app'; minSdk 24; targetSdk 34; versionCode 1; versionName '1.0' } }" >> app/build.gradle
+          echo "dependencies { implementation 'androidx.appcompat:appcompat:1.6.1' }" >> app/build.gradle
           echo "sdk.dir=$ANDROID_HOME" > local.properties
           echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:allowBackup="true" android:label="BeautySwap" android:theme="@android:style/Theme.NoTitleBar"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
           echo '<resources><string name="app_name">BeautySwap</string></resources>' > app/src/main/res/values/strings.xml
           echo '<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="BeautySwap Ready!" android:textSize="24sp"/></LinearLayout>' > app/src/main/res/layout/activity_main.xml
           echo 'package com.beautyswap.app; import android.os.Bundle; import androidx.appcompat.app.AppCompatActivity; public class MainActivity extends AppCompatActivity { protected void onCreate(Bundle b){ super.onCreate(b); setContentView(R.layout.activity_main); } }' > app/src/main/java/com/beautyswap/app/MainActivity.java
-          gradle wrapper --gradle-version 8.5
+          wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
+          unzip -q gradle-8.5-bin.zip
+          ./gradle-8.5/bin/gradle wrapper --gradle-version 8.5
           chmod +x gradlew
-         ./gradlew :app:assembleDebug
-      - uses: actions/upload-artifact@v4
+          ./gradlew assembleDebug
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: BeautySwap-APK
           path: app/build/outputs/apk/debug/*.apk

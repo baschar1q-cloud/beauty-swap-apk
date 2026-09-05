@@ -10,20 +10,41 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: android-actions/setup-android@v3
-      - name: Create Project
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.5
+      - name: Create Project and Build
         run: |
           echo "include ':app'" > settings.gradle
+          echo "rootProject.name='BeautySwap'" >> settings.gradle
           mkdir -p app/src/main/java/com/beautyswap/app
           mkdir -p app/src/main/res/layout
           mkdir -p app/src/main/res/values
-          printf "plugins { id 'com.android.application' }\nandroid { namespace 'com.beautyswap.app'; compileSdk 34; defaultConfig { applicationId 'com.beautyswap.app'; minSdk 24; targetSdk 34; versionCode 1; versionName '1.0' } }\ndependencies { implementation 'androidx.appcompat:appcompat:1.6.1' }\n" > app/build.gradle
+          cat > app/build.gradle <<'EOF'
+          plugins { id 'com.android.application' }
+          android {
+            namespace 'com.beautyswap.app'
+            compileSdk 34
+            defaultConfig {
+              applicationId 'com.beautyswap.app'
+              minSdk 24
+              targetSdk 34
+              versionCode 1
+              versionName '1.0'
+            }
+          }
+          dependencies {
+            implementation 'androidx.appcompat:appcompat:1.6.1'
+          }
+          EOF
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          printf '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:allowBackup="true" android:label="BeautySwap" android:theme="@android:style/Theme.NoTitleBar"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
-          printf '<resources><string name="app_name">BeautySwap</string></resources>' > app/src/main/res/values/strings.xml
-          printf '<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="BeautySwap Ready!" android:textSize="24sp"/></LinearLayout>' > app/src/main/res/layout/activity_main.xml
-          printf 'package com.beautyswap.app; import android.os.Bundle; import androidx.appcompat.app.AppCompatActivity; public class MainActivity extends AppCompatActivity { protected void onCreate(Bundle b){ super.onCreate(b); setContentView(R.layout.activity_main); } }' > app/src/main/java/com/beautyswap/app/MainActivity.java
-      - name: Build
-        run: ./gradlew :app:assembleDebug
+          echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:allowBackup="true" android:label="BeautySwap" android:theme="@android:style/Theme.NoTitleBar"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
+          echo '<resources><string name="app_name">BeautySwap</string></resources>' > app/src/main/res/values/strings.xml
+          echo '<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="BeautySwap Ready!" android:textSize="24sp"/></LinearLayout>' > app/src/main/res/layout/activity_main.xml
+          echo 'package com.beautyswap.app; import android.os.Bundle; import androidx.appcompat.app.AppCompatActivity; public class MainActivity extends AppCompatActivity { protected void onCreate(Bundle b){ super.onCreate(b); setContentView(R.layout.activity_main); } }' > app/src/main/java/com/beautyswap/app/MainActivity.java
+          gradle wrapper --gradle-version 8.5
+          chmod +x gradlew
+         ./gradlew :app:assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: BeautySwap-APK
